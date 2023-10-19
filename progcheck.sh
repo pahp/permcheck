@@ -6,6 +6,59 @@ TOTAL=0
 STEP=0
 SECTIONS=1
 
+function file_has_modebit ()
+{
+	# returns true if permissions grep pattern matches for file
+	MYPATH=$1
+	MODEGREP=$2
+
+	if [[ -d $MYPATH ]]
+	then
+		# this path is a directory, so get just its line
+		PATHLINE=$(ls -al $MYPATH | grep -E "[[:space:]]\.$")
+	else
+		PATHLINE=$(ls -al $MYPATH)
+
+	fi
+
+	if grep  -E "$MODEGREP" <<< $PATHLINE &> /dev/null
+	then
+		true
+	else
+		false
+	fi
+
+}
+
+function test_path_owner ()
+{
+	MYPATH=$1
+	OWNER=$2
+
+	if ls -al $MYPATH | grep -E "^..........[[:space:]]+[[:digit:]]+[[:space:]]+$OWNER" &> /dev/null
+	then
+		true
+	else
+		false
+	fi
+
+}
+
+function test_path_group ()
+{
+	MYPATH=$1
+	GROUP=$2
+
+	if ls -al $MYPATH | grep -E "^..........[[:space:]]+[[:digit:]]+[[:space:]]+[[:alnum:]]+[[:space:]]+$GROUP" &> /dev/null
+	then
+		true
+	else
+		false
+	fi
+
+}
+
+
 function fail ()
 {
 	SECTIONS=$((SECTIONS - 1))
@@ -291,10 +344,10 @@ for OLDBIE in ken dmr bwk
 do
 
 	# ownership of admin homedirs should be ken:ken, etc.
-	if ! ls -n /admins | grep $OLDBIE | grep -E "$OLDBIE.+$OLDBIE" &> /dev/null
+	if ! ls -al /admins | grep $OLDBIE | grep -E "$OLDBIE.+$OLDBIE" &> /dev/null
 	then
-		echo "Ownership for /admins/$OLDBIE is not correct."
-		ls -n /admins | grep $OLDBIE
+		echo "Owner or group for /admins/$OLDBIE is not correct."
+		ls -al /admins | grep $OLDBIE
 		fail
 	fi
 	
@@ -302,29 +355,134 @@ do
 	if ! ls -al /admins | grep $OLDBIE | grep -E "^d......r-x" &> /dev/null
 	then
 		echo "The 'other' group permissions on /admins/$OLDBIE are not correct."
-		ls -al admins | grep $OLDBIE
+		ls -al /admins | grep $OLDBIE
 		fail
 	fi
 
 	if ! ls -al /admins | grep $OLDBIE | grep -E "d...rwsr-x" &> /dev/null
 	then
 		echo "The 'group' permissions on /admins/$OLDBIE are not correct."
-		ls -al admins | grep $OLDBIE
+		ls -al /admins | grep $OLDBIE
+		if ! ls -al /admins | grep $OLDBIE | grep -E "d.....s..." &> /dev/null
+		then
+			echo "(Have you looked into the SGID bit?)"
+		fi
 		fail
 	fi
 
 	if ! ls -al /admins | grep $OLDBIE | grep -E "drwxrwsr-x" &> /dev/null
 	then
 		echo "Owner permissions on /admins/$OLDBIE are not correct."
-		ls -al admins | grep $OLDBIE
+		ls -al /admins | grep $OLDBIE
 		fail
 	fi
 
 done
 
-inc_success
+inc_progress
 
+SECTIONS=2
+echo "Section 2: The Ballot Box..."
+echo
+
+###############################################################################
+# task 1 - /ballots
+###############################################################################
+if [[ ! -d /ballots ]]
+then
+	echo "The /ballots folder does not exist! Create it! (hint: use 'mkdir')"
+	fail
+fi
+
+inc_progress
+
+###############################################################################
+# task 2 - /ballots owner and permissions
+###############################################################################
+
+if ! test_path_owner /ballots root
+then
+	echo "The root user doesn't own /ballots!"
+	ls -al / | grep ballots
+	fail
+fi
+
+# other permissions (other users)
+
+if ! file_has_modebit /ballots "^d........x"
+then
+	echo "Other users cannot access /ballots (but they need to!)."
+	ls -al / | grep ballots
+	fail
+fi
+
+
+if ! file_has_modebit /ballots "^d.......w."
+then
+	echo "Other users cannot write to /ballots (and they need to!)."
+	ls -al / | grep ballots
+	fail
+fi
+
+if file_has_modebit /ballots "^d......r.."
+then
+	echo "Other users are able to read /ballots (they shouldn't be able to!)."
+	ls -al / | grep ballots
+	fail
+fi
+
+###############################################################################
+# task 3 - /ballots group ownership and permissions
+###############################################################################
+
+if ! test_path_group /ballots wheel
+then
+	echo "The group is not correct for /ballots!"
+	ls -al / | grep ballots
+	fail
+fi
+
+# make sure wheel can't access /ballots without sudo
+
+if file_has_modebit /ballots "^d.....x..."
+then
+	echo "Members of the 'wheel' group can access (use) /ballots..."
+	ls -al / | grep ballots
+	fail
+fi
+
+if file_has_modebit /ballots "^d...r....."
+then
+	echo "Members of the 'wheel' group can read /ballots..."
+	ls -al / | grep ballots
+	fail
+fi
+
+if file_has_modebit /ballots "^d....w...."
+then
+	echo "Members of the 'wheel' group can write to /ballots..."
+	ls -al / | grep ballots
+	fail
+fi
+
+
+SECTIONS=3
+echo "Section 3: The TPS Reports Directory..."
+echo
+
+###############################################################################
+# task 1 - /tpsreports
+###############################################################################
+if [[ ! -d /tpsreports ]]
+then
+	echo "The /tpsreports folder does not exist! Create it! (hint: use 'mkdir')"
+	fail
+fi
+
+inc_progress
 
 
 ###############################################################################
 echo "You did it!"
+
+
