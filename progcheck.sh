@@ -57,9 +57,6 @@ inc_progress
 # task 3 - create non-admin accounts larry, moe, and curly
 ###############################################################################
 
-WHEEL_LINE=$(grep wheel /etc/group)
-EMP_LINE=$(grep emp /etc/group)
-
 for ACCT in larry moe curly
 do
 
@@ -70,7 +67,17 @@ do
 		echo "The user '$ACCT' does not exist. Create it! (hint: use 'adduser')"
 		fail
 	fi
+done
 
+###############################################################################
+# task 4 - create non-admin accounts larry, moe, and curly
+###############################################################################
+
+WHEEL_LINE=$(grep wheel /etc/group)
+EMP_LINE=$(grep emp /etc/group)
+
+for ACCT in larry moe curly
+do
 	# check for emp membership
 
 	if ! grep $ACCT <<< $EMP_LINE &> /dev/null
@@ -93,7 +100,7 @@ done
 inc_progress
 
 ###############################################################################
-# task 5 - create the admins ken, dmr, bwk
+# task 5 - create the admins ken, dmr, bwk in /admins/username
 ###############################################################################
 
 
@@ -147,6 +154,177 @@ do
 done
 
 inc_progress
+
+###############################################################################
+# task 7 - ken group members
+###############################################################################
+
+if ! grep ^ken /etc/group | grep bwk | grep dmr | grep larry  &> /dev/null
+then
+	echo "Someone is missing from ken's group: it should have bwk, dmr, and larry in any order, but had:"
+	grep ^ken /etc/group
+	fail
+fi
+
+if grep ^ken /etc/group | grep moe &> /dev/null || grep ^ken /etc/group | grep curly &> /dev/null
+then
+	echo "Someone is in ken's group who shouldn't be!"
+	grep ^ken /etc/group
+	fail
+fi
+
+inc_progress
+
+###############################################################################
+# task 8 - dmr group members
+###############################################################################
+
+if ! grep ^dmr /etc/group | grep curly | grep ken | grep bwk  &> /dev/null
+then
+	echo "Someone is missing from dmr's group: it should have curly, ken, and bwk in any order, but had:"
+	grep ^dmr /etc/group
+	fail
+fi
+
+if grep ^dmr /etc/group | grep larry &> /dev/null || grep ^dmr /etc/group | grep moe &> /dev/null
+then
+	echo "Someone is in dmr's group who shouldn't be!"
+	grep ^dmr /etc/group
+	fail
+fi
+
+inc_progress
+
+
+
+###############################################################################
+# task 9 - bwk group members
+###############################################################################
+
+if ! grep ^bwk /etc/group | grep moe | grep dmr | grep ken &> /dev/null
+then
+	echo "Someone is missing from bwk's group: it should have moe, dmr, and ken in any order, but had:"
+	grep ^bwk /etc/group
+	fail
+fi
+
+if grep ^bwk /etc/group | grep larry &> /dev/null || grep ^bwk /etc/group | grep curly &> /dev/null
+then
+	echo "Someone is in bwk's group who shouldn't be!"
+	grep ^bwk /etc/group
+	fail
+fi
+
+inc_progress
+
+###############################################################################
+# task 10 - /home/homedir permissions
+###############################################################################
+
+for EMP in larry moe curly
+do
+
+	# other should have no permissions
+	if ! ls -al /home | grep $EMP | grep -E "^d......---" &> /dev/null
+	then
+		echo "Homedir /home/$EMP has incorrect permissions -- the 'other' group has permissions!"
+		ls -al /home | grep $EMP
+		fail
+	fi
+	
+	# the group should have r-x
+	if ! ls -al /home | grep $EMP | grep -E "^d...r-x---" &> /dev/null
+	then
+		echo "Homedir /home/$EMP has incorrect group permissions!"
+		ls -al /home | grep $EMP
+		fail
+	fi
+	
+	# the owner should have rwx
+	if ! ls -al /home | grep $EMP | grep -E "^drwxr-x---" &> /dev/null
+	then
+		echo "Homedir /home/$EMP has incorrect permissions for the owner!"
+		ls -al /home | grep $EMP
+		fail
+	fi
+
+done
+
+inc_progress
+
+###############################################################################
+# task 11 - permissions on /home
+###############################################################################
+
+# wheel should be the group of the home directory to enable admin access
+if ! ls -al / | grep home | grep -E "root.+wheel" &> /dev/null
+then
+	echo "The owner or group for /home is not correct."
+	ls -al / | grep home
+	fail
+fi
+
+# 'other' permissions on home should be --x
+if ! ls -al / | grep home | grep -E "^d......--x" &> /dev/null
+then
+	echo "The 'other' group  can read or write on /home, or it CAN'T execute on /home."
+	ls -al / | grep home
+	fail
+fi
+
+# permissions on home should be rwxrwx--x
+if ! ls -al / | grep home | grep -E "^d...rwx--x" &> /dev/null
+then
+	echo "The wheel group does not have correct permissions on /home."
+	ls -al / | grep home
+	fail
+fi
+
+inc_progress
+
+
+###############################################################################
+# task 12 - permissions on /admins/*
+###############################################################################
+
+for OLDBIE in ken dmr bwk
+do
+
+	# ownership of admin homedirs should be ken:ken, etc.
+	if ! ls -n /admins | grep $OLDBIE | grep -E "$OLDBIE.+$OLDBIE" &> /dev/null
+	then
+		echo "Ownership for /admins/$OLDBIE is not correct."
+		ls -n /admins | grep $OLDBIE
+		fail
+	fi
+	
+	# permissions for oldbie homedirs
+	if ! ls -al /admins | grep $OLDBIE | grep -E "^d......r-x" &> /dev/null
+	then
+		echo "The 'other' group permissions on /admins/$OLDBIE are not correct."
+		ls -al admins | grep $OLDBIE
+		fail
+	fi
+
+	if ! ls -al /admins | grep $OLDBIE | grep -E "d...rwsr-x" &> /dev/null
+	then
+		echo "The 'group' permissions on /admins/$OLDBIE are not correct."
+		ls -al admins | grep $OLDBIE
+		fail
+	fi
+
+	if ! ls -al /admins | grep $OLDBIE | grep -E "drwxrwsr-x" &> /dev/null
+	then
+		echo "Owner permissions on /admins/$OLDBIE are not correct."
+		ls -al admins | grep $OLDBIE
+		fail
+	fi
+
+done
+
+inc_success
+
+
 
 ###############################################################################
 echo "You did it!"
