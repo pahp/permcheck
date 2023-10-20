@@ -13,6 +13,12 @@ then
 	exit
 fi
 
+function group_exists()
+{
+	# returns true if exists
+	getent group $1 &> /dev/null
+}
+
 function user_exists()
 {
 	USERNAME=$1
@@ -106,7 +112,7 @@ echo
 ###############################################################################
 # task 1 - /admins
 ###############################################################################
-if [[ ! -d /admins ]]
+if ! dir_exists /admins
 then
 	echo "The /admins folder does not exist! Create it! (hint: use 'mkdir')"
 	fail
@@ -120,7 +126,7 @@ inc_progress
 
 for GROUP in emp wheel
 do
-	if ! grep "^$GROUP" /etc/group &> /dev/null
+	if ! group_exists $GROUP
 	then
 		echo "The group '$GROUP' does not exist. Create it! (hint: use 'groupadd')"
 		fail
@@ -137,7 +143,7 @@ do
 
 	# check for existence
 
-	if ! grep "^$ACCT" /etc/passwd &> /dev/null
+	if ! user_exists $ACCT
 	then
 		echo "The user '$ACCT' does not exist. Create it! (hint: use 'adduser')"
 		fail
