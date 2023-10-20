@@ -190,7 +190,7 @@ do
 
 	# check for existence
 
-	if ! grep "^$ACCT" /etc/passwd &> /dev/null
+	if ! user_exists $ACCT
 	then
 		echo "The user '$ACCT' does not exist. Create it! (hint: use 'adduser')"
 		fail
