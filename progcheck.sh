@@ -64,7 +64,7 @@ function test_path_owner ()
 	OWNER=$2
 
 	# returns true on a match, else false
-	ls -al $MYPATH | grep -E "^..........[[:space:]]+[[:digit:]]+[[:space:]]+$OWNER" &> /dev/null
+	ls -al $MYPATH | grep -E "^..........[.+@]?[[:space:]]+[[:digit:]]+[[:space:]]+$OWNER" &> /dev/null
 
 }
 
@@ -74,7 +74,7 @@ function test_path_group ()
 	GROUP=$2
 
 	# returns true on a match else false
-	ls -al $MYPATH | grep -E "^..........[[:space:]]+[[:digit:]]+[[:space:]]+[[:alnum:]]+[[:space:]]+$GROUP" &> /dev/null
+	ls -al $MYPATH | grep -E "^..........[.+@]?[[:space:]]+[[:digit:]]+[[:space:]]+[[:alnum:]]+[[:space:]]+$GROUP" &> /dev/null
 
 }
 
