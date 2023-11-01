@@ -337,6 +337,16 @@ inc_progress
 # task 11 - permissions on /home
 ###############################################################################
 
+# 'other' permissions on home should be --x
+if ! ls -al / | grep home | grep -E "^d......--x" &> /dev/null
+then
+	echo "The 'other' group  can read or write on /home, or it CAN'T execute on /home."
+	echo "If the other group can't execute on /home, you won't be able to log in!!!"
+	ls -al / | grep home
+	fail
+fi
+
+
 # wheel should be the group of the home directory to enable admin access
 
 if ! test_path_owner /home root
@@ -349,14 +359,6 @@ fi
 if ! test_path_group /home wheel
 then
 	echo "/home should be group 'wheel' (hint: chgrp)"
-	ls -al / | grep home
-	fail
-fi
-
-# 'other' permissions on home should be --x
-if ! ls -al / | grep home | grep -E "^d......--x" &> /dev/null
-then
-	echo "The 'other' group  can read or write on /home, or it CAN'T execute on /home."
 	ls -al / | grep home
 	fail
 fi
