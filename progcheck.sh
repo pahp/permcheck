@@ -299,33 +299,33 @@ fi
 inc_progress
 
 ###############################################################################
-# task 10 - /home/homedir permissions
+# task 10 - /emp/empdir permissions
 ###############################################################################
 
 for EMP in larry moe curly
 do
 
 	# other should have no permissions
-	if ! ls -al /home | grep $EMP | grep -E "^d......---" &> /dev/null
+	if ! ls -al /emp | grep $EMP | grep -E "^d......---" &> /dev/null
 	then
-		echo "Homedir /home/$EMP has incorrect permissions -- the 'other' group has permissions!"
-		ls -al /home | grep $EMP
+		echo "Homedir /emp/$EMP has incorrect permissions -- the 'other' group has permissions!"
+		ls -al /emp | grep $EMP
 		fail
 	fi
 	
 	# the group should have r-x
-	if ! ls -al /home | grep $EMP | grep -E "^d...r-x---" &> /dev/null
+	if ! ls -al /emp | grep $EMP | grep -E "^d...r-x---" &> /dev/null
 	then
-		echo "Homedir /home/$EMP has incorrect group permissions!"
-		ls -al /home | grep $EMP
+		echo "Homedir /emp/$EMP has incorrect group permissions!"
+		ls -al /emp | grep $EMP
 		fail
 	fi
 	
 	# the owner should have rwx
-	if ! ls -al /home | grep $EMP | grep -E "^drwxr-x---" &> /dev/null
+	if ! ls -al /emp | grep $EMP | grep -E "^drwxr-x---" &> /dev/null
 	then
-		echo "Homedir /home/$EMP has incorrect permissions for the owner!"
-		ls -al /home | grep $EMP
+		echo "Homedir /emp/$EMP has incorrect permissions for the owner!"
+		ls -al /emp | grep $EMP
 		fail
 	fi
 
@@ -334,40 +334,40 @@ done
 inc_progress
 
 ###############################################################################
-# task 11 - permissions on /home
+# task 11 - permissions on /emp
 ###############################################################################
 
-# 'other' permissions on home should be --x
-if ! ls -al / | grep home | grep -E "^d......--x" &> /dev/null
+# 'other' permissions on emp should be --x
+if ! ls -al / | grep emp | grep -E "^d......--x" &> /dev/null
 then
-	echo "The 'other' group  can read or write on /home, or it CAN'T execute on /home."
-	echo "If the other group can't execute on /home, you won't be able to log in!!!"
-	ls -al / | grep home
+	echo "The 'other' group  can read or write on /emp, or it CAN'T execute on /emp."
+	echo "If the other group can't execute onemp, you won't be able to log in!!!"
+	ls -al / | grep emp
 	fail
 fi
 
 
-# wheel should be the group of the home directory to enable admin access
+# wheel should be the group of the emp directory to enable admin access
 
-if ! test_path_owner /home root
+if ! test_path_owner /emp root
 then
-	echo "Home should be owned by root. (hint: chown)"
-	ls -al / | grep home
+	echo "emp should be owned by root. (hint: chown)"
+	ls -al / | grep emp
 	fail
 fi
 
-if ! test_path_group /home wheel
+if ! test_path_group /emp wheel
 then
-	echo "/home should be group 'wheel' (hint: chgrp)"
-	ls -al / | grep home
+	echo "/emp should be group 'wheel' (hint: chgrp)"
+	ls -al / | grep emp
 	fail
 fi
 
-# permissions on home should be rwxrwx--x
-if ! ls -al / | grep home | grep -E "^d...rwx--x" &> /dev/null
+# permissions on emp should be rwxrwx--x
+if ! ls -al / | grep emp | grep -E "^d...rwx--x" &> /dev/null
 then
-	echo "The wheel group does not have correct permissions on /home."
-	ls -al / | grep home
+	echo "The wheel group does not have correct permissions on /emp."
+	ls -al / | grep emp
 	fail
 fi
 
