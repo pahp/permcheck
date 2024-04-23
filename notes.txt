@@ -1,0 +1,11 @@
+program should identify "old school" permissions tarball
+
+then it should make 'etc' and move xyz into that directory
+
+then all tests should be from the relative directory
+
+all tests should use the groups and stuff from etc/passwd and etc/group
+
+is there a way to always display the group number instead of name?
+tests could use the number
+errors could display the names
